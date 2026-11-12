@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  java-basics:
+    name: Java Basics (JUnit 5)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: java-basics
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - run: mvn -B test
+
+  selenium-testng-practice:
+    name: Selenium TestNG Practice (headless Chrome)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: selenium-testng-practice
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - run: mvn -B test
+      - name: Upload TestNG reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: testng-reports
+          path: selenium-testng-practice/target/surefire-reports

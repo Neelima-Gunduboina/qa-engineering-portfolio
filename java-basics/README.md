@@ -1,6 +1,8 @@
 # Java Basics — Complete Learning Project
 
-A hands-on Java learning project covering every core concept from primitives to streams, with a full Student Management System, JUnit 5 unit tests, and Selenium browser tests.
+A hands-on Java learning project covering every core concept from primitives to streams, with a full Student Management System and JUnit 5 unit tests.
+
+> Selenium browser automation lives in the sibling project [`../selenium-testng-practice`](../selenium-testng-practice).
 
 ---
 
@@ -8,9 +10,10 @@ A hands-on Java learning project covering every core concept from primitives to 
 
 ```
 java-basics/
-├── pom.xml                              ← Maven build (JUnit 5 + Selenium 4)
+├── pom.xml                              ← Maven build (JUnit 5)
 ├── src/
 │   ├── main/java/com/javabasics/
+│   │   ├── basics/                     ← Fibonacci, sum of digits, palindrome, prime, factorial
 │   │   ├── fundamentals/               ← Data types, operators, type casting
 │   │   ├── controlflow/                ← if/else, loops, switch
 │   │   ├── oop/                        ← OOP pillars (4 concepts)
@@ -23,8 +26,8 @@ java-basics/
 │   │       ├── service/StudentService.java
 │   │       └── StudentManagementApp.java
 │   └── test/java/com/javabasics/
-│       ├── project/StudentServiceTest.java    ← JUnit 5 tests
-│       └── selenium/GoogleSearchTest.java     ← Selenium tests
+│       ├── basics/NumberProgramsTest.java     ← JUnit 5 parameterized tests
+│       └── project/StudentServiceTest.java    ← JUnit 5 tests
 └── docs/                               ← Detailed topic guides
 ```
 
@@ -47,7 +50,8 @@ java-basics/
 | 11 | Collections | `collections/CollectionsDemo.java` |
 | 12 | Exception Handling | `exceptions/ExceptionHandlingDemo.java` |
 | 13 | Lambdas & Streams | `streams/LambdaAndStreamsDemo.java` |
-| 14 | Mini Project | `project/StudentManagementApp.java` |
+| 14 | Classic number programs | `basics/NumberPrograms.java` |
+| 15 | Mini Project | `project/StudentManagementApp.java` |
 
 ---
 
@@ -57,7 +61,6 @@ java-basics/
 |------|---------|
 | Java | 17+ |
 | Maven | 3.8+ |
-| Chrome | Latest |
 
 ---
 
@@ -68,19 +71,14 @@ java-basics/
 mvn compile exec:java -Dexec.mainClass="com.javabasics.project.StudentManagementApp"
 ```
 
-### Run all JUnit tests
-```bash
-mvn test -Dexclude=**/selenium/**
-```
-
-### Run Selenium tests
-```bash
-mvn test -Dtest=GoogleSearchTest
-```
-
-### Run everything
+### Run all tests
 ```bash
 mvn test
+```
+
+### Run one test class
+```bash
+mvn test -Dtest=NumberProgramsTest
 ```
 
 ---
@@ -111,10 +109,11 @@ A layered application demonstrating real-world Java patterns:
 - Parameterized tests for GPA boundaries and grade mapping
 - Covers CRUD, validation, search, and statistics
 
-### Selenium (`GoogleSearchTest.java`)
-- 10 test cases against Google Search
-- Headless Chrome via WebDriverManager (no manual driver setup)
-- Covers navigation, form input, waits, XPath, screenshots
+### JUnit 5 (`NumberProgramsTest.java`)
+- Parameterized tests (`@CsvSource`, `@ValueSource`) for Fibonacci, sum of digits, reverse, palindrome, prime, factorial
+- Boundary and invalid-input cases (0, negatives, overflow limits)
+
+**70 tests in total, all passing.**
 
 ---
 
