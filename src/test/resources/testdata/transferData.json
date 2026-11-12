@@ -1,5 +1,5 @@
 [
-  {
-    "amount": "50.00"
-  }
+  { "amount": "10.00",  "description": "small transfer" },
+  { "amount": "99.99",  "description": "two-decimal amount" },
+  { "amount": "0.01",   "description": "minimum amount" }
 ]

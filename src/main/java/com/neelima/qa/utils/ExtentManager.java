@@ -20,7 +20,7 @@ public class ExtentManager {
             ExtentSparkReporter spark = new ExtentSparkReporter(reportPath);
             extent = new ExtentReports();
             extent.attachReporter(spark);
-            extent.setSystemInfo("Environment", ConfigLoader.get("env", "qa"));
+            extent.setSystemInfo("Environment", System.getProperty("env", "qa"));
             extent.setSystemInfo("Base URL", ConfigLoader.get("base.url", ""));
         }
         return extent;

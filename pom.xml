@@ -6,31 +6,25 @@
     <artifactId>qa-portfolio-parabank</artifactId>
     <version>1.0.0</version>
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <selenium.version>4.11.0</selenium.version>
-        <testng.version>7.8.0</testng.version>
-        <restassured.version>5.3.0</restassured.version>
-        <webdrivermanager.version>5.3.2</webdrivermanager.version>
-        <log4j2.version>2.20.0</log4j2.version>
-        <extentreports.version>5.0.9</extentreports.version>
-        <h2.version>2.2.220</h2.version>
-        <jackson.version>2.15.2</jackson.version>
-        <gson.version>2.10.1</gson.version>
+        <selenium.version>4.52.0</selenium.version>
+        <testng.version>7.12.0</testng.version>
+        <restassured.version>5.5.6</restassured.version>
+        <log4j2.version>2.24.3</log4j2.version>
+        <extentreports.version>5.1.2</extentreports.version>
+        <h2.version>2.3.232</h2.version>
+        <jackson.version>2.18.2</jackson.version>
+        <env>qa</env>
+        <suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
     </properties>
 
     <dependencies>
-        <!-- Selenium + WebDriverManager -->
+        <!-- Selenium (Selenium Manager resolves the browser driver automatically) -->
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
             <version>${selenium.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.github.bonigarcia</groupId>
-            <artifactId>webdrivermanager</artifactId>
-            <version>${webdrivermanager.version}</version>
         </dependency>
 
         <!-- TestNG -->
@@ -84,24 +78,11 @@
             <version>${h2.version}</version>
         </dependency>
 
-        <!-- JSON utilities -->
+        <!-- JSON test data -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>${jackson.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>${gson.version}</version>
-        </dependency>
-
-        <!-- Optional: MySQL connector if you want to point tests to MySQL -->
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>8.0.33</version>
-            <scope>runtime</scope>
         </dependency>
 
     </dependencies>
@@ -111,17 +92,13 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
-                <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
-                </configuration>
+                <version>3.13.0</version>
             </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.0.0-M7</version>
+                <version>3.5.2</version>
                 <configuration>
                     <systemPropertyVariables>
                         <env>${env}</env>
@@ -151,14 +128,18 @@
             <id>smoke</id>
             <properties>
                 <suiteXmlFile>src/test/resources/smoke.xml</suiteXmlFile>
-                <env>qa</env>
             </properties>
         </profile>
         <profile>
             <id>regression</id>
             <properties>
                 <suiteXmlFile>src/test/resources/regression.xml</suiteXmlFile>
-                <env>qa</env>
+            </properties>
+        </profile>
+        <profile>
+            <id>api-db</id>
+            <properties>
+                <suiteXmlFile>src/test/resources/api-db.xml</suiteXmlFile>
             </properties>
         </profile>
     </profiles>

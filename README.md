@@ -1,112 +1,84 @@
-# QA Automation Portfolio — ParaBank (Java, Selenium, REST Assured, H2)
+# ParaBank QA Portfolio: UI, API and Backend Testing
 
-This repository is a polished automation framework demonstrating UI, API and DB testing using the exact stack on my resume.
+End-to-end test framework for **ParaBank**, a public demo online bank. It covers banking workflows the way I test them at work: functional UI flows, API checks with **Postman** and **REST Assured**, and **SQL backend validation** of transfer business rules.
 
-**Project snapshot**
-- Language: Java 17 (Maven)
-- UI: Selenium WebDriver 4 + Page Object Model + PageFactory
-- Test Runner: TestNG
-- API: REST Assured
-- DB: JDBC with H2 (in-memory) / optional MySQL
-- Reporting: ExtentReports + TestNG reports
-- Logging: Log4j2
-- CI: GitHub Actions (runs `smoke` on push)
+![Java](https://img.shields.io/badge/Java-17-blue) ![Selenium](https://img.shields.io/badge/Selenium-4.52-green) ![TestNG](https://img.shields.io/badge/TestNG-7.12-orange) ![Postman](https://img.shields.io/badge/Postman-Newman-ff6c37) ![SQL](https://img.shields.io/badge/SQL-Oracle%20mode-lightgrey)
 
-**Repository structure**
+## What is tested
 
-qa-portfolio-parabank/
-- pom.xml
-- .gitignore
-- README.md
-- src/main/java/
-  - pages/ (Page Objects)
-  - utils/ (Config, DB utils, waits, reporting helpers)
-  - api/clients/ (REST clients)
-- src/test/java/
-  - base/ (BaseTest with ThreadLocal WebDriver)
-  - listeners/ (TestNG listeners for reporting/screenshots)
-  - tests/ui/ (UI tests)
-  - tests/api/ (API tests)
-  - tests/db/ (DB tests)
-- src/test/resources/
-  - config-qa.properties, config-staging.properties
-  - testng.xml, smoke.xml, regression.xml
-  - testdata/ (JSON test data)
+| Layer | Scenarios | Tool |
+|---|---|---|
+| **UI** | Registration, duplicate username, login / invalid / empty login, open account, **fund transfer with balance reconciliation** (data-driven), **bill payment** | Selenium WebDriver, POM, TestNG |
+| **API** | Valid / invalid login, customer accounts, account lookup, unknown account (400), non-numeric amount, **transfer → balances → transaction history** | REST Assured + Postman/Newman |
+| **Backend (SQL)** | Debit/credit, total-balance reconciliation, audit row, **insufficient funds rollback**, unknown account rollback, negative amount blocked | JDBC + H2 (Oracle mode) |
+| **Defects** | [DEF-001](docs/defects/DEF-001-negative-transfer-amount.md): API accepts a negative transfer amount | Reproduced in TestNG and Postman |
 
-**Architecture (mermaid)**
+## Project structure
 
-```mermaid
-flowchart LR
-  UI[TestNG UI Tests] -->|Page Objects| Pages
-  UI -->|Validations| API[TestNG API Tests]
-  UI -->|Backend check| DB[H2 / JDBC]
-  API -->|Calls| RestClient
-  Reports -->|Aggregates| ExtentReports
+```
+├── postman/                               # Postman collection + environment (13 requests, 28 assertions)
+├── sql/backend-validation-queries.sql     # Oracle SQL used for post-transfer DB checks
+├── docs/defects/                          # Defect reports
+├── src/main/java/com/neelima/qa/
+│   ├── pages/                             # Page Objects (BasePage with explicit waits)
+│   ├── api/ParaBankApiClient.java         # REST Assured client
+│   └── utils/                             # Config, DB, JSON, Extent reporting, screenshots
+└── src/test/
+    ├── java/com/neelima/qa/
+    │   ├── base/BaseTest.java             # ThreadLocal WebDriver (parallel-safe)
+    │   ├── listeners/TestListener.java    # ExtentReports + screenshot on failure
+    │   ├── dataproviders/                 # JSON-driven @DataProviders
+    │   └── tests/{ui,api,db}/
+    └── resources/
+        ├── config-qa.properties / config-staging.properties
+        ├── testng.xml · smoke.xml · regression.xml · api-db.xml
+        ├── db/schema.sql                  # schema with CHECK constraints = business rules
+        └── testdata/*.json
 ```
 
-Overview
-- UI tests target the public ParaBank demo UI (https://parabank.parasoft.com). Tests use POM + PageFactory, explicit waits, and encapsulated assertions.
-- API tests use REST Assured against a stable demo API (configurable via properties). By default `api.base.url` points to Restful-Booker as a fallback.
-- DB tests use an embedded H2 instance to demonstrate JDBC validation and SQL-based checks. Note: full DB-level validation of Parabank's backend requires access to their DB; this project demonstrates the same approach using an embedded DB to mirror backend assertions.
+## How to run
 
-Key features
-- Thread-safe WebDriver via `ThreadLocal<WebDriver>` in `BaseTest` for parallel runs.
-- TestNG groups and suites: smoke, regression and full suites.
-- Data-driven tests via TestNG `@DataProvider` reading JSON test data.
-- ExtentReports HTML output in `reports/` with screenshots on failures.
-- Config driven via `config-qa.properties` and `config-staging.properties` and Maven profiles for env switching.
-
-Quick start
-
-Prerequisites
-- Java 17
-- Maven 3.6+
-- Chrome browser (tests use ChromeDriver via WebDriverManager)
-
-Run the smoke suite (default QA config):
+Prerequisites: Java 17+, Maven 3.9+, Chrome (Selenium Manager fetches the driver automatically).
 
 ```bash
-mvn test -Psmoke
+mvn test                      # full suite
+mvn test -Psmoke              # smoke tests only
+mvn test -Pregression         # regression
+mvn test -Papi-db             # API + DB only (no browser needed)
+mvn test -Denv=staging        # switch environment config
+mvn test -Dheadless=false     # watch the browser
 ```
 
-Run regression (longer):
+Postman / Newman:
 
 ```bash
-mvn test -Pregression
+npx newman run postman/ParaBank-API.postman_collection.json \
+  -e postman/ParaBank-QA.postman_environment.json \
+  --folder "01 Authentication" --folder "02 Accounts" --folder "03 Fund Transfer (end-to-end)"
 ```
 
-To explicitly choose env (optional):
+You can also import both files into the Postman app and use **Run collection**.
+
+Docker (API + DB suites):
 
 ```bash
-mvn test -Psmoke -Denv=qa
-# or
-mvn test -Psmoke -Denv=staging
+docker build -t parabank-qa . && docker run --rm parabank-qa
 ```
 
-Reports
-- Extent report: `reports/extent-report.html` (artifact uploaded by CI)
-- Screenshots: `reports/screenshots/`
+## Reports
 
-Security / credentials
-- No credentials are stored in the repository. Config values like passwords should be supplied via environment variables or CI secrets. `ConfigLoader` reads `-Denv=` and loads `config-<env>.properties`.
+- ExtentReports HTML: `reports/extent-report.html` (failed UI tests include a screenshot)
+- TestNG/Surefire: `target/surefire-reports/`
+- CI: GitHub Actions runs the Maven smoke suite and the Newman collection on every push, then uploads both reports as artifacts.
 
-Skills demonstrated (mapping to resume)
+## Design choices
 
-- UI automation: Selenium WebDriver (POM + PageFactory), explicit waits, stable locators
-- API testing: REST Assured (status codes, body/schema assertions, chained workflows)
-- DB validation: JDBC + SQL assertions against an H2 schema (mirrors backend verification)
-- CI/CD: GitHub Actions running headless tests and publishing artifacts
-- Reporting: ExtentReports with screenshots and TestNG integration
-- Design: Thread-safe test base, data-driven tests, clear package separation
+- **No `Thread.sleep()`**: every interaction waits explicitly, and ParaBank's AJAX-loaded account dropdowns are awaited before selection.
+- **Assertions check the data itself**, not just the page: for example, a transfer test reads balances before and after and checks the debit and credit with `BigDecimal`.
+- **Self-contained test data**: each UI test registers its own unique customer, and API transfer tests open fresh accounts, so tests don't depend on shared state.
+- **Known defects are tracked, not hidden**: they sit in the `known-defect` TestNG group (excluded from suites) and in a separate Postman folder.
+- **No real secrets**: `john/demo` is ParaBank's published demo login and can be overridden with `-Dapi.username` / `-Dapi.password`.
 
-Suggested GitHub repo name
+## Note on the database layer
 
-`neelima-qa-portfolio-parabank`
-
-Suggested repo description (paste into GitHub)
-
-"Java 17 Test Automation framework (Selenium, TestNG, REST Assured, JDBC) showcasing end-to-end UI, API and DB validations against public demo apps. CI-ready with GitHub Actions and rich HTML reporting."
-
----
-
-Next steps: I will now create every file (source, tests, resources, CI workflow) under the project folder.
+ParaBank's production database isn't publicly reachable, so the DB tests use an in-memory H2 database in **Oracle compatibility mode**. The schema enforces the same rules a core-banking backend would (no overdraft, positive amounts, referential integrity), and the tests use the same approach I use for SQL/Oracle backend validation on real projects.

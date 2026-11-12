@@ -1,32 +1,50 @@
 package com.neelima.qa.tests.ui;
 
 import com.neelima.qa.base.BaseTest;
+import com.neelima.qa.dataproviders.JsonDataProvider;
+import com.neelima.qa.listeners.TestListener;
 import com.neelima.qa.pages.AccountsOverviewPage;
 import com.neelima.qa.pages.LoginPage;
 import com.neelima.qa.pages.RegisterPage;
-import com.neelima.qa.utils.ConfigLoader;
 import org.testng.Assert;
 import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
 
-@Listeners({com.neelima.qa.listeners.TestListener.class})
+import java.util.Map;
+
+@Listeners(TestListener.class)
 public class LoginTest extends BaseTest {
 
-    @Test(groups = {"smoke", "regression"})
-    public void registerAndLogin() {
-        String base = ConfigLoader.get("base.url");
-        getDriver().get(base + "/parabank/register.htm");
-        RegisterPage rp = new RegisterPage(getDriver());
-        String username = "autouser_" + System.currentTimeMillis();
-        String password = "Pwd@12345";
-        rp.register("Auto", "User", "1 Test St", "City", "ST", "00000", "555-0000", "111-22-3333", username, password);
+    @Test(groups = {"smoke", "regression"}, dataProvider = "registerData", dataProviderClass = JsonDataProvider.class,
+            description = "Registered customer can log out and log back in")
+    public void registeredCustomerCanLogin(Map<String, Object> template) {
+        Map<String, String> customer = uniqueCustomer(template);
+        open("/register.htm");
+        new RegisterPage(getDriver()).register(customer);
+        new AccountsOverviewPage(getDriver()).logOut();
 
-        // After registration, attempt login
-        getDriver().get(base + "/parabank/login.htm");
-        LoginPage lp = new LoginPage(getDriver());
-        AccountsOverviewPage ap = lp.login(username, password);
+        AccountsOverviewPage overview = new LoginPage(getDriver())
+                .login(customer.get("username"), customer.get("password"));
 
-        String page = getDriver().getPageSource();
-        Assert.assertTrue(page.contains("Accounts Overview") || page.contains("Log Out"), "Login appears to have failed or accounts overview not found");
+        Assert.assertEquals(overview.getHeading(), "Accounts Overview");
+        Assert.assertTrue(overview.isLoggedIn(), "Log Out link should be visible after login");
+        Assert.assertEquals(overview.getAccountIds().size(), 1, "A new customer should have exactly one account");
+    }
+
+    @Test(groups = {"regression", "negative"}, description = "Unknown credentials are rejected")
+    public void invalidCredentialsAreRejected() {
+        open("/index.htm");
+        LoginPage login = new LoginPage(getDriver())
+                .attemptInvalidLogin("no_such_user_" + System.nanoTime(), "wrongPassword");
+
+        Assert.assertEquals(login.getErrorMessage(), "The username and password could not be verified.");
+    }
+
+    @Test(groups = {"regression", "negative"}, description = "Empty credentials are rejected")
+    public void emptyCredentialsAreRejected() {
+        open("/index.htm");
+        LoginPage login = new LoginPage(getDriver()).attemptInvalidLogin("", "");
+
+        Assert.assertEquals(login.getErrorMessage(), "Please enter a username and password.");
     }
 }

@@ -1,46 +1,51 @@
 package com.neelima.qa.pages;
 
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
-import org.openqa.selenium.support.PageFactory;
 
 /**
- * Page object for the Transfer Funds page.
+ * ParaBank Transfer Funds page (transfer.htm).
  */
-public class FundTransferPage {
-    private WebDriver driver;
+public class FundTransferPage extends BasePage {
+
+    private static final By RESULT_HEADING = By.cssSelector("#showResult h1.title");
+    private static final By AMOUNT_RESULT = By.id("amountResult");
+    private static final By FROM_RESULT = By.id("fromAccountIdResult");
+    private static final By TO_RESULT = By.id("toAccountIdResult");
 
     @FindBy(id = "amount")
-    private WebElement amountField;
-
-    @FindBy(id = "fromAccountId")
-    private WebElement fromAccount;
-
-    @FindBy(id = "toAccountId")
-    private WebElement toAccount;
+    private WebElement amount;
 
     @FindBy(css = "input[value='Transfer']")
     private WebElement transferButton;
 
     public FundTransferPage(WebDriver driver) {
-        this.driver = driver;
-        PageFactory.initElements(driver, this);
+        super(driver);
     }
 
-    /**
-     * Performs a fund transfer and returns the confirmation text.
-     */
-    public String transfer(String fromAcct, String toAcct, String amount) {
-        try {
-            fromAccount.sendKeys(fromAcct);
-        } catch (Exception ignore) {}
-        try {
-            toAccount.sendKeys(toAcct);
-        } catch (Exception ignore) {}
-        amountField.clear();
-        amountField.sendKeys(amount);
-        transferButton.click();
-        return driver.getPageSource();
+    public FundTransferPage transfer(String fromAccountId, String toAccountId, String value) {
+        type(amount, value);
+        loadedSelect("#fromAccountId").selectByVisibleText(fromAccountId);
+        loadedSelect("#toAccountId").selectByVisibleText(toAccountId);
+        click(transferButton);
+        return this;
+    }
+
+    public String getResultHeading() {
+        return textOf(RESULT_HEADING);
+    }
+
+    public String getAmountResult() {
+        return textOf(AMOUNT_RESULT);
+    }
+
+    public String getFromAccountResult() {
+        return textOf(FROM_RESULT);
+    }
+
+    public String getToAccountResult() {
+        return textOf(TO_RESULT);
     }
 }

@@ -1,62 +1,79 @@
 package com.neelima.qa.utils;
 
-import java.sql.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 /**
- * Simple JDBC utilities for H2 in-memory DB used by DB tests.
+ * JDBC helpers for backend validation tests.
+ * Uses an in-memory H2 database in Oracle compatibility mode so the SQL mirrors
+ * what would be run against an Oracle core-banking schema (e.g. FLEXCUBE).
  */
-public class DBUtils {
-    private static String url = ConfigLoader.get("db.url", "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1");
-    private static String user = ConfigLoader.get("db.user", "sa");
-    private static String pass = ConfigLoader.get("db.pass", "");
+public final class DBUtils {
+
+    private static final String URL = ConfigLoader.get("db.url");
+    private static final String USER = ConfigLoader.get("db.user", "sa");
+    private static final String PASS = ConfigLoader.get("db.pass", "");
+
+    private DBUtils() {
+    }
 
     public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(url, user, pass);
+        return DriverManager.getConnection(URL, USER, PASS);
     }
 
-    public static void initSchema() {
-        try (Connection c = getConnection(); Statement s = c.createStatement()) {
-            s.execute("CREATE TABLE IF NOT EXISTS accounts (id INT PRIMARY KEY, owner VARCHAR(100), balance DECIMAL(15,2));");
-            s.execute("CREATE TABLE IF NOT EXISTS transactions (id IDENTITY PRIMARY KEY, from_acct INT, to_acct INT, amount DECIMAL(15,2), description VARCHAR(255), created TIMESTAMP DEFAULT CURRENT_TIMESTAMP());");
-            // seed sample accounts
-            s.execute("MERGE INTO accounts (id, owner, balance) KEY(id) VALUES (1001, 'Auto Tester', 1000.00);");
-            s.execute("MERGE INTO accounts (id, owner, balance) KEY(id) VALUES (1002, 'Auto Tester', 500.00);");
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+    /** Drops and recreates the schema from db/schema.sql so every test class starts clean. */
+    public static void resetSchema() {
+        runScript("db/schema.sql");
     }
 
-    public static double getBalance(int accountId) {
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement("SELECT balance FROM accounts WHERE id = ?")) {
-            ps.setInt(1, accountId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getDouble(1);
-                throw new RuntimeException("Account not found: " + accountId);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+    public static BigDecimal getBalance(long accountId) {
+        return queryForDecimal("SELECT balance FROM accounts WHERE account_id = ?", accountId);
     }
 
-    public static void applyTransfer(int fromAcct, int toAcct, double amount, String desc) {
+    public static BigDecimal totalBalance() {
+        return queryForDecimal("SELECT SUM(balance) FROM accounts");
+    }
+
+    public static int countTransactions(long accountId) {
+        return queryForDecimal("SELECT COUNT(*) FROM transactions WHERE from_acct = ? OR to_acct = ?",
+                accountId, accountId).intValue();
+    }
+
+    /**
+     * Debits one account and credits another inside a single DB transaction,
+     * writing an audit row. Any failure (e.g. CHECK balance >= 0) rolls the whole thing back.
+     */
+    public static void applyTransfer(long fromAcct, long toAcct, BigDecimal amount, String description) {
         try (Connection c = getConnection()) {
             c.setAutoCommit(false);
-            try (PreparedStatement withdraw = c.prepareStatement("UPDATE accounts SET balance = balance - ? WHERE id = ?");
-                 PreparedStatement deposit = c.prepareStatement("UPDATE accounts SET balance = balance + ? WHERE id = ?");
-                 PreparedStatement ins = c.prepareStatement("INSERT INTO transactions (from_acct,to_acct,amount,description) VALUES (?,?,?,?)")) {
-                withdraw.setDouble(1, amount);
-                withdraw.setInt(2, fromAcct);
-                withdraw.executeUpdate();
+            try (PreparedStatement debit = c.prepareStatement(
+                         "UPDATE accounts SET balance = balance - ? WHERE account_id = ?");
+                 PreparedStatement credit = c.prepareStatement(
+                         "UPDATE accounts SET balance = balance + ? WHERE account_id = ?");
+                 PreparedStatement audit = c.prepareStatement(
+                         "INSERT INTO transactions (from_acct, to_acct, amount, description) VALUES (?, ?, ?, ?)")) {
 
-                deposit.setDouble(1, amount);
-                deposit.setInt(2, toAcct);
-                deposit.executeUpdate();
+                debit.setBigDecimal(1, amount);
+                debit.setLong(2, fromAcct);
+                requireOneRow(debit.executeUpdate(), fromAcct);
 
-                ins.setInt(1, fromAcct);
-                ins.setInt(2, toAcct);
-                ins.setDouble(3, amount);
-                ins.setString(4, desc);
-                ins.executeUpdate();
+                credit.setBigDecimal(1, amount);
+                credit.setLong(2, toAcct);
+                requireOneRow(credit.executeUpdate(), toAcct);
+
+                audit.setLong(1, fromAcct);
+                audit.setLong(2, toAcct);
+                audit.setBigDecimal(3, amount);
+                audit.setString(4, description);
+                audit.executeUpdate();
 
                 c.commit();
             } catch (SQLException e) {
@@ -64,7 +81,55 @@ public class DBUtils {
                 throw e;
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new TransferFailedException(e);
+        }
+    }
+
+    /** Thrown when the database rejects a transfer; the transfer has been rolled back. */
+    public static class TransferFailedException extends RuntimeException {
+        public TransferFailedException(Throwable cause) {
+            super(cause.getMessage(), cause);
+        }
+    }
+
+    private static void requireOneRow(int updated, long accountId) throws SQLException {
+        if (updated != 1) {
+            throw new SQLException("Account not found: " + accountId);
+        }
+    }
+
+    private static BigDecimal queryForDecimal(String sql, Object... params) {
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            for (int i = 0; i < params.length; i++) {
+                ps.setObject(i + 1, params[i]);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next() || rs.getBigDecimal(1) == null) {
+                    throw new IllegalStateException("No result for: " + sql);
+                }
+                return rs.getBigDecimal(1);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private static void runScript(String resource) {
+        try (InputStream in = DBUtils.class.getClassLoader().getResourceAsStream(resource)) {
+            if (in == null) {
+                throw new IllegalStateException("SQL script not found: " + resource);
+            }
+            String script = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+            try (Connection c = getConnection(); Statement s = c.createStatement()) {
+                for (String statement : script.split(";")) {
+                    String sql = statement.replaceAll("(?m)^--.*$", "").trim();
+                    if (!sql.isEmpty()) {
+                        s.execute(sql);
+                    }
+                }
+            }
+        } catch (IOException | SQLException e) {
+            throw new IllegalStateException("Failed to run " + resource, e);
         }
     }
 }

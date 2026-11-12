@@ -2,30 +2,42 @@ package com.neelima.qa.tests.ui;
 
 import com.neelima.qa.base.BaseTest;
 import com.neelima.qa.dataproviders.JsonDataProvider;
+import com.neelima.qa.listeners.TestListener;
 import com.neelima.qa.pages.RegisterPage;
-import com.neelima.qa.utils.ConfigLoader;
 import org.testng.Assert;
 import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
 
 import java.util.Map;
 
-@Listeners({com.neelima.qa.listeners.TestListener.class})
+@Listeners(TestListener.class)
 public class RegisterTest extends BaseTest {
 
-    @Test(groups = {"regression", "smoke"}, dataProvider = "registerData", dataProviderClass = JsonDataProvider.class)
-    public void registerNewUser(Map<String, Object> data) {
-        String base = ConfigLoader.get("base.url");
-        getDriver().get(base + "/parabank/register.htm");
-        RegisterPage rp = new RegisterPage(getDriver());
+    @Test(groups = {"smoke", "regression"}, dataProvider = "registerData", dataProviderClass = JsonDataProvider.class,
+            description = "New customer can register and is logged in automatically")
+    public void registerNewCustomer(Map<String, Object> template) {
+        Map<String, String> customer = uniqueCustomer(template);
 
-        long ts = System.currentTimeMillis();
-        String usernameTemplate = (String) data.get("username");
-        String username = usernameTemplate.replace("${timestamp}", String.valueOf(ts));
-        rp.register((String) data.get("firstName"), (String) data.get("lastName"), (String) data.get("address"), (String) data.get("city"), (String) data.get("state"), (String) data.get("zipCode"), (String) data.get("phone"), (String) data.get("ssn"), username, (String) data.get("password"));
+        open("/register.htm");
+        RegisterPage page = new RegisterPage(getDriver()).register(customer);
 
-        // Basic assertion: registration success message present on page
-        String page = getDriver().getPageSource();
-        Assert.assertTrue(page.contains("Welcome") || page.contains("Your account was created"), "Registration confirmation not found in page source");
+        Assert.assertEquals(page.getWelcomeHeading(), "Welcome " + customer.get("username"));
+        Assert.assertEquals(page.getWelcomeText(),
+                "Your account was created successfully. You are now logged in.");
+    }
+
+    @Test(groups = {"regression", "negative"}, dataProvider = "registerData", dataProviderClass = JsonDataProvider.class,
+            description = "Registering an existing username is rejected")
+    public void duplicateUsernameIsRejected(Map<String, Object> template) {
+        Map<String, String> customer = uniqueCustomer(template);
+
+        open("/register.htm");
+        new RegisterPage(getDriver()).register(customer);
+        getDriver().manage().deleteAllCookies();
+
+        open("/register.htm");
+        RegisterPage second = new RegisterPage(getDriver()).register(customer);
+
+        Assert.assertEquals(second.getUsernameError(), "This username already exists.");
     }
 }

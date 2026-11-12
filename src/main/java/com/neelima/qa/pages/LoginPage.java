@@ -1,15 +1,16 @@
 package com.neelima.qa.pages;
 
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
-import org.openqa.selenium.support.PageFactory;
 
 /**
- * Page object for the ParaBank login page.
+ * ParaBank login panel (left sidebar on index.htm).
  */
-public class LoginPage {
-    private WebDriver driver;
+public class LoginPage extends BasePage {
+
+    private static final By ERROR = By.cssSelector("#rightPanel p.error");
 
     @FindBy(name = "username")
     private WebElement username;
@@ -17,24 +18,31 @@ public class LoginPage {
     @FindBy(name = "password")
     private WebElement password;
 
-    // login button locator - fallbacks may be required if site changes
     @FindBy(css = "input[value='Log In']")
     private WebElement loginButton;
 
     public LoginPage(WebDriver driver) {
-        this.driver = driver;
-        PageFactory.initElements(driver, this);
+        super(driver);
     }
 
-    /**
-     * Performs login and returns the AccountsOverviewPage.
-     */
     public AccountsOverviewPage login(String user, String pass) {
-        username.clear();
-        username.sendKeys(user);
-        password.clear();
-        password.sendKeys(pass);
-        loginButton.click();
+        submit(user, pass);
         return new AccountsOverviewPage(driver);
+    }
+
+    /** Submits credentials that are expected to be rejected. */
+    public LoginPage attemptInvalidLogin(String user, String pass) {
+        submit(user, pass);
+        return this;
+    }
+
+    public String getErrorMessage() {
+        return textOf(ERROR);
+    }
+
+    private void submit(String user, String pass) {
+        type(username, user);
+        type(password, pass);
+        click(loginButton);
     }
 }
