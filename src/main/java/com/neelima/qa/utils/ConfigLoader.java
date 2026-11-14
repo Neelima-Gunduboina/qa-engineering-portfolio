@@ -7,6 +7,7 @@ import java.util.Properties;
 /**
  * Loads environment-specific configuration properties.
  * Usage: pass -Denv=qa or -Denv=staging to Maven or rely on default 'qa'.
+ * Any key can be overridden on the command line, e.g. -Dapi.username=alice.
  */
 public class ConfigLoader {
     private static final Properties props = new Properties();
@@ -33,10 +34,11 @@ public class ConfigLoader {
     }
 
     public static String get(String key) {
-        return props.getProperty(key);
+        return System.getProperty(key, props.getProperty(key));
     }
 
     public static String get(String key, String defaultValue) {
-        return props.getProperty(key, defaultValue);
+        String value = get(key);
+        return value == null || value.isBlank() ? defaultValue : value;
     }
 }

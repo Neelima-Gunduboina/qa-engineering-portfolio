@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       suite:
-        description: "Maven profile to run (smoke | regression)"
+        description: "Maven profile to run (smoke | regression | api-db)"
         default: smoke
 
 jobs:
@@ -46,13 +46,13 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Run collection (excluding known-defect folder)
         run: |
           npx -y newman@6 run postman/ParaBank-API.postman_collection.json \
             -e postman/ParaBank-QA.postman_environment.json \
-            --folder "01 Authentication" --folder "02 Accounts" --folder "03 Fund Transfer (end-to-end)" \
+            --folder "00 Setup" --folder "01 Authentication" --folder "02 Accounts" --folder "03 Fund Transfer (end-to-end)" \
             --reporters cli,junit --reporter-junit-export newman/results.xml
 
       - name: Upload Newman results

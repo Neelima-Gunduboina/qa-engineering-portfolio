@@ -10,6 +10,7 @@ import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 /**
@@ -20,20 +21,33 @@ import java.util.List;
 public class AccountApiTest {
 
     private final ParaBankApiClient api = new ParaBankApiClient();
+    private String username;
+    private String password;
     private long customerId;
     private long primaryAccountId;
 
+    /**
+     * Uses -Dapi.username / -Dapi.password when given; otherwise registers a fresh customer
+     * so the suite never depends on shared demo data that the site may reset.
+     */
     @BeforeClass(alwaysRun = true)
-    public void loginAsDemoCustomer() {
-        Response login = api.login(ConfigLoader.get("api.username"), ConfigLoader.get("api.password"));
-        Assert.assertEquals(login.statusCode(), 200, "Demo customer login failed: " + login.asString());
+    public void setUpCustomer() {
+        username = ConfigLoader.get("api.username", "");
+        password = ConfigLoader.get("api.password", "");
+        if (username.isEmpty()) {
+            username = "api" + System.currentTimeMillis();
+            password = "Test@1234";
+            api.registerCustomer(username, password);
+        }
+        Response login = api.login(username, password);
+        Assert.assertEquals(login.statusCode(), 200, "Customer login failed: " + login.asString());
         customerId = login.jsonPath().getLong("id");
         primaryAccountId = api.getCustomerAccounts(customerId).jsonPath().getLong("[0].id");
     }
 
     @Test(groups = {"smoke", "regression", "api"}, description = "Valid login returns the customer profile")
     public void validLoginReturnsCustomer() {
-        Response r = api.login(ConfigLoader.get("api.username"), ConfigLoader.get("api.password"));
+        Response r = api.login(username, password);
 
         Assert.assertEquals(r.statusCode(), 200);
         Assert.assertEquals(r.contentType(), "application/json");
@@ -100,6 +114,23 @@ public class AccountApiTest {
                 "Transfer missing from target account history: " + descriptions);
     }
 
+    @Test(groups = {"regression", "api", "e2e"},
+            description = "Bill payment via the API debits the account and is logged")
+    public void billPayDebitsAccount() {
+        long account = openAccount(0);
+        BigDecimal before = balanceOf(account);
+        BigDecimal amount = new BigDecimal("25.50");
+
+        Response r = api.payBill(account, amount.toPlainString(), "British Gas");
+
+        Assert.assertEquals(r.statusCode(), 200);
+        Assert.assertEquals(r.jsonPath().getString("payeeName"), "British Gas");
+        Assert.assertEquals(balanceOf(account), before.subtract(amount), "Account not debited");
+        List<String> descriptions = api.getTransactions(account).jsonPath().getList("description", String.class);
+        Assert.assertTrue(descriptions.contains("Bill Payment to British Gas"),
+                "Bill payment missing from history: " + descriptions);
+    }
+
     /**
      * Known defect DEF-001 (docs/defects/DEF-001-negative-transfer-amount.md):
      * the API accepts a negative amount and moves money in reverse.
@@ -124,6 +155,8 @@ public class AccountApiTest {
     }
 
     private BigDecimal balanceOf(long accountId) {
-        return new BigDecimal(api.getAccount(accountId).jsonPath().getString("balance"));
+        // Normalise scale so 80.0 and 80.00 compare equal (BigDecimal.equals is scale-sensitive)
+        return new BigDecimal(api.getAccount(accountId).jsonPath().getString("balance"))
+                .setScale(2, RoundingMode.HALF_UP);
     }
 }

@@ -142,5 +142,11 @@
                 <suiteXmlFile>src/test/resources/api-db.xml</suiteXmlFile>
             </properties>
         </profile>
+        <profile>
+            <id>known-defects</id>
+            <properties>
+                <suiteXmlFile>src/test/resources/known-defects.xml</suiteXmlFile>
+            </properties>
+        </profile>
     </profiles>
 </project>

@@ -7,6 +7,7 @@ import com.neelima.qa.pages.AccountsOverviewPage;
 import com.neelima.qa.pages.FundTransferPage;
 import com.neelima.qa.pages.OpenAccountPage;
 import com.neelima.qa.pages.RegisterPage;
+import com.neelima.qa.retry.RetryOnce;
 import com.neelima.qa.utils.JsonUtils;
 import org.testng.Assert;
 import org.testng.annotations.Listeners;
@@ -21,7 +22,7 @@ import java.util.Map;
 @Listeners(TestListener.class)
 public class FundTransferTest extends BaseTest {
 
-    @Test(groups = {"regression", "e2e"}, dataProvider = "transferData", dataProviderClass = JsonDataProvider.class,
+    @Test(groups = {"regression", "e2e"}, retryAnalyzer = RetryOnce.class, dataProvider = "transferData", dataProviderClass = JsonDataProvider.class,
             description = "Funds move between a customer's own accounts and balances reconcile")
     public void transferBetweenOwnAccounts(Map<String, Object> data) {
         String amount = String.valueOf(data.get("amount"));

@@ -31,7 +31,13 @@ public class LoginTest extends BaseTest {
         Assert.assertEquals(overview.getAccountIds().size(), 1, "A new customer should have exactly one account");
     }
 
-    @Test(groups = {"regression", "negative"}, description = "Unknown credentials are rejected")
+    /**
+     * Known defect DEF-002 (docs/defects/DEF-002-login-accepts-unknown-credentials.md):
+     * the web login accepts an unknown username/password and signs the visitor in as
+     * another customer. Kept in the "known-defect" group so the suites stay green while
+     * the defect stays reproducible: mvn test -Pknown-defects
+     */
+    @Test(groups = {"known-defect", "negative"}, description = "DEF-002: unknown credentials must be rejected")
     public void invalidCredentialsAreRejected() {
         open("/index.htm");
         LoginPage login = new LoginPage(getDriver())

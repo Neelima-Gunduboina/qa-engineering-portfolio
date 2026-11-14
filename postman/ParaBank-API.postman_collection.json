@@ -6,6 +6,134 @@
   },
   "item": [
     {
+      "name": "00 Setup",
+      "description": "Registers a fresh customer for this run. The public demo resets its data regularly, so the collection never relies on a shared account such as john/demo. ParaBank has no REST endpoint for sign-up, so this posts the same form a browser does (the GET first creates the session cookie).",
+      "item": [
+        {
+          "name": "Open registration page (session cookie)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Use an existing customer if one is set in the environment, otherwise create one",
+                  "if (!pm.environment.get(\"username\")) {",
+                  "  pm.environment.set(\"username\", \"pm\" + Date.now());",
+                  "  pm.environment.set(\"password\", \"Test@1234\");",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Registration page loads\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{webUrl}}/register.htm",
+              "host": [
+                "{{webUrl}}"
+              ],
+              "path": [
+                "register.htm"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Register customer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Customer created\", () => pm.expect(pm.response.text()).to.include(\"Your account was created successfully\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "customer.firstName",
+                  "value": "Postman"
+                },
+                {
+                  "key": "customer.lastName",
+                  "value": "Tester"
+                },
+                {
+                  "key": "customer.address.street",
+                  "value": "1 Test Street"
+                },
+                {
+                  "key": "customer.address.city",
+                  "value": "London"
+                },
+                {
+                  "key": "customer.address.state",
+                  "value": "LDN"
+                },
+                {
+                  "key": "customer.address.zipCode",
+                  "value": "E1 6AN"
+                },
+                {
+                  "key": "customer.phoneNumber",
+                  "value": "07000000000"
+                },
+                {
+                  "key": "customer.ssn",
+                  "value": "123-45-6789"
+                },
+                {
+                  "key": "customer.username",
+                  "value": "{{username}}"
+                },
+                {
+                  "key": "customer.password",
+                  "value": "{{password}}"
+                },
+                {
+                  "key": "repeatedPassword",
+                  "value": "{{password}}"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{webUrl}}/register.htm",
+              "host": [
+                "{{webUrl}}"
+              ],
+              "path": [
+                "register.htm"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "01 Authentication",
       "item": [
         {
@@ -356,7 +484,7 @@
                 "exec": [
                   "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
                   "const v = pm.collectionVariables;",
-                  "pm.test(\"Confirmation message\", () => pm.expect(pm.response.text()).to.eql(`Successfully transferred $${v.get(\"amount\")} from account #${v.get(\"fromAccountId\")} to account #${v.get(\"toAccountId\")}`));"
+                  "pm.test(\"Confirmation message\", () => pm.expect(pm.response.text()).to.eql(`Successfully transferred $${pm.variables.get(\"amount\")} from account #${v.get(\"fromAccountId\")} to account #${v.get(\"toAccountId\")}`));"
                 ]
               }
             }
@@ -406,7 +534,7 @@
                   "const v = pm.collectionVariables;",
                   "const accts = pm.response.json();",
                   "const bal = id => accts.find(a => a.id === Number(id)).balance;",
-                  "const amt = Number(v.get(\"amount\"));",
+                  "const amt = Number(pm.variables.get(\"amount\"));",
                   "pm.test(\"Source debited by amount\", () => pm.expect(bal(v.get(\"fromAccountId\"))).to.be.closeTo(Number(v.get(\"fromBefore\")) - amt, 0.001));",
                   "pm.test(\"Target credited by amount\", () => pm.expect(bal(v.get(\"toAccountId\"))).to.be.closeTo(Number(v.get(\"toBefore\")) + amt, 0.001));"
                 ]
@@ -445,11 +573,12 @@
                 "exec": [
                   "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
                   "const txns = pm.response.json();",
+                  "const amt = Number(pm.variables.get(\"amount\"));",
                   "pm.test(\"Credit recorded on target account\", () => {",
-                  "  const t = txns.find(x => x.description === \"Funds Transfer Received\");",
-                  "  pm.expect(t, \"transfer transaction\").to.exist;",
+                  "  // The account-opening deposit has the same description, so match on the amount too",
+                  "  const t = txns.find(x => x.description === \"Funds Transfer Received\" && x.amount === amt);",
+                  "  pm.expect(t, \"transfer transaction for \" + amt).to.exist;",
                   "  pm.expect(t.type).to.eql(\"Credit\");",
-                  "  pm.expect(t.amount).to.eql(Number(pm.collectionVariables.get(\"amount\")));",
                   "});"
                 ]
               }

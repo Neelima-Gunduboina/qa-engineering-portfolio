@@ -3,6 +3,7 @@ package com.neelima.qa.api;
 import com.neelima.qa.utils.ConfigLoader;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.filter.log.LogDetail;
+import io.restassured.filter.session.SessionFilter;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
@@ -23,6 +24,36 @@ public class ParaBankApiClient {
                 .setAccept(ContentType.JSON)
                 .log(LogDetail.URI)
                 .build();
+    }
+
+    /**
+     * Registers a brand-new customer through the public sign-up form.
+     * ParaBank has no REST endpoint for registration, so this posts the same form a user
+     * submits in the browser (a session cookie from the GET is required first).
+     * The demo site is reset regularly, so tests create their own customer instead of
+     * relying on a shared account such as john/demo.
+     */
+    public void registerCustomer(String username, String password) {
+        SessionFilter session = new SessionFilter();
+        String webUrl = ConfigLoader.get("base.url");
+        given().filter(session).get(webUrl + "/register.htm").then().statusCode(200);
+        Response r = given().filter(session)
+                .contentType(ContentType.URLENC)
+                .formParam("customer.firstName", "Api")
+                .formParam("customer.lastName", "Tester")
+                .formParam("customer.address.street", "1 Test Street")
+                .formParam("customer.address.city", "London")
+                .formParam("customer.address.state", "LDN")
+                .formParam("customer.address.zipCode", "E1 6AN")
+                .formParam("customer.phoneNumber", "07000000000")
+                .formParam("customer.ssn", "123-45-6789")
+                .formParam("customer.username", username)
+                .formParam("customer.password", password)
+                .formParam("repeatedPassword", password)
+                .post(webUrl + "/register.htm");
+        if (r.statusCode() != 200 || !r.asString().contains("Your account was created successfully")) {
+            throw new IllegalStateException("Customer registration failed (HTTP " + r.statusCode() + ")");
+        }
     }
 
     public Response login(String username, String password) {
@@ -59,5 +90,17 @@ public class ParaBankApiClient {
                 .queryParam("toAccountId", toAccountId)
                 .queryParam("amount", amount)
                 .post("/transfer");
+    }
+
+    public Response payBill(long accountId, String amount, String payeeName) {
+        String payee = """
+                {"name":"%s","address":{"street":"1 Payee Road","city":"London","state":"LDN","zipCode":"E1 6AN"},
+                 "phoneNumber":"02000000000","accountNumber":12345678}""".formatted(payeeName);
+        return given(spec)
+                .contentType(ContentType.JSON)
+                .queryParam("accountId", accountId)
+                .queryParam("amount", amount)
+                .body(payee)
+                .post("/billpay");
     }
 }

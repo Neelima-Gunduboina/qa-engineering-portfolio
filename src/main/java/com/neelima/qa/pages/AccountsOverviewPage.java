@@ -47,6 +47,6 @@ public class AccountsOverviewPage extends BasePage {
     }
 
     public void logOut() {
-        driver.findElement(LOG_OUT).click();
+        wait.until(ExpectedConditions.elementToBeClickable(LOG_OUT)).click();
     }
 }

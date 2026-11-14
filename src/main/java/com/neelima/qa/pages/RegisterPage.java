@@ -4,6 +4,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import java.util.Map;
 
@@ -15,6 +16,7 @@ public class RegisterPage extends BasePage {
     private static final By WELCOME_HEADING = By.cssSelector("#rightPanel h1.title");
     private static final By WELCOME_TEXT = By.cssSelector("#rightPanel p");
     private static final By USERNAME_ERROR = By.id("customer.username.errors");
+    private static final By REGISTER_BUTTON = By.cssSelector("input[value='Register']");
 
     @FindBy(id = "customer.firstName")
     private WebElement firstName;
@@ -38,8 +40,6 @@ public class RegisterPage extends BasePage {
     private WebElement password;
     @FindBy(id = "repeatedPassword")
     private WebElement repeatedPassword;
-    @FindBy(css = "input[value='Register']")
-    private WebElement registerButton;
 
     public RegisterPage(WebDriver driver) {
         super(driver);
@@ -60,7 +60,11 @@ public class RegisterPage extends BasePage {
         type(username, customer.get("username"));
         type(password, customer.get("password"));
         type(repeatedPassword, customer.get("password"));
-        click(registerButton);
+        // The form posts a full page. Wait for the old page to go away before returning,
+        // otherwise a test that navigates straight after can race the registration response.
+        WebElement button = wait.until(ExpectedConditions.elementToBeClickable(REGISTER_BUTTON));
+        button.click();
+        wait.until(ExpectedConditions.stalenessOf(button));
         return this;
     }
 

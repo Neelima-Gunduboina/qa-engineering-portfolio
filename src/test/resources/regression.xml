@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<suite name="Regression Suite" parallel="classes" thread-count="3">
+<!-- UI suites run sequentially: the shared ParaBank demo keeps server-side state across
+     sessions (DEF-002), so parallel browser sessions can interfere with each other. -->
+<suite name="Regression Suite" parallel="none">
     <test name="Regression Suite">
         <groups>
             <run>
