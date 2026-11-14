@@ -2,7 +2,7 @@
 
 End-to-end test framework for **ParaBank**, a public demo online bank. It covers banking workflows the way I test them at work: functional UI flows, API checks with **Postman** and **REST Assured**, and **SQL backend validation** of transfer business rules.
 
-![Java](https://img.shields.io/badge/Java-17-blue) ![Selenium](https://img.shields.io/badge/Selenium-4.52-green) ![TestNG](https://img.shields.io/badge/TestNG-7.12-orange) ![Postman](https://img.shields.io/badge/Postman-Newman-ff6c37) ![SQL](https://img.shields.io/badge/SQL-Oracle%20mode-lightgrey)
+![Java](https://img.shields.io/badge/Java-25-blue) ![Selenium](https://img.shields.io/badge/Selenium-4.52-green) ![TestNG](https://img.shields.io/badge/TestNG-7.12-orange) ![Postman](https://img.shields.io/badge/Postman-Newman-ff6c37) ![SQL](https://img.shields.io/badge/SQL-Oracle%20mode-lightgrey)
 
 ## What is tested
 
@@ -38,7 +38,7 @@ End-to-end test framework for **ParaBank**, a public demo online bank. It covers
 
 ## How to run
 
-Prerequisites: Java 17+, Maven 3.9+, Chrome (Selenium Manager fetches the driver automatically).
+Prerequisites: Java 25+, Maven 3.9+, Chrome (Selenium Manager fetches the driver automatically).
 
 ```bash
 mvn test                      # full suite
