@@ -2,7 +2,7 @@
 
 My learning repository for core Java and Selenium automation, built alongside my work as a QA Engineer in banking and insurance.
 
-[![CI](https://github.com/Neelima-Gunduboina/neelima-my-learning/actions/workflows/ci.yml/badge.svg)](https://github.com/Neelima-Gunduboina/neelima-my-learning/actions/workflows/ci.yml)
+[![CI](https://github.com/Neelima-Gunduboina/neelima-my-learning/actions/workflows/ci.yml/badge.svg)](https://github.com/Neelima-Gunduboina/neelima-my-learning/actions/workflows/ci.yml) ![Java](https://img.shields.io/badge/Java-17-blue) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
 | Project | What it covers | Tests |
 |---|---|---|
@@ -20,5 +20,9 @@ cd selenium-testng-practice && mvn test    # needs Chrome; runs headless
 
 ## See also
 
-- [qa-portfolio-parabank](https://github.com/Neelima-Gunduboina/qa-portfolio-parabank): banking test framework covering UI, API (REST Assured + Postman) and SQL backend validation
+- [qa-portfolio-parabank](https://github.com/Neelima-Gunduboina/qa-portfolio-parabank): banking test framework covering UI, API (REST Assured + Postman) and SQL backend validation, where I applied these skills and found 3 real defects in the demo bank
 - [ai-banking-qa-portfolio](https://github.com/Neelima-Gunduboina/ai-banking-qa-portfolio): Playwright + TypeScript framework
+
+## License
+
+MIT, see [LICENSE](LICENSE).
