@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: "Maven profile to run (smoke | regression | api-db)"
+        default: smoke
+
+jobs:
+  java-tests:
+    name: Selenium + REST Assured + DB (${{ github.event.inputs.suite || 'smoke' }})
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Run tests (headless Chrome)
+        run: mvn -B test -P${{ github.event.inputs.suite || 'smoke' }}
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: java-test-reports
+          path: |
+            reports/
+            target/surefire-reports/
+            logs/
+
+  postman-tests:
+    name: Postman / Newman API tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run collection (excluding known-defect folder)
+        run: |
+          npx -y newman@6 run postman/ParaBank-API.postman_collection.json \
+            -e postman/ParaBank-QA.postman_environment.json \
+            --folder "00 Setup" --folder "01 Authentication" --folder "02 Accounts" --folder "03 Fund Transfer (end-to-end)" \
+            --reporters cli,junit --reporter-junit-export newman/results.xml
+
+      - name: Upload Newman results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: newman-results
+          path: newman/

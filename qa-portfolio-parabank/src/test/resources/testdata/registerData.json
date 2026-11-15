@@ -1,0 +1,14 @@
+[
+  {
+    "firstName": "Auto",
+    "lastName": "Tester",
+    "address": "1 Test St",
+    "city": "Testville",
+    "state": "TS",
+    "zipCode": "12345",
+    "phone": "555-0100",
+    "ssn": "123-45-6789",
+    "username": "${unique}",
+    "password": "Password123!"
+  }
+]
