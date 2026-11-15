@@ -1,0 +1,26 @@
+# Scenarios an experienced tester would expect for FT-101.
+# A scenario counts as covered when one generated test case mentions ALL its keywords.
+- id: valid-transfer-updates-both-balances
+  keywords: ["balance", "debit", "credit"]
+- id: upper-boundary-at-limit
+  keywords: ["25000.00"]
+- id: upper-boundary-above-limit
+  keywords: ["25000.01"]
+- id: zero-amount-rejected
+  keywords: ["0.00", "reject"]
+- id: lowest-valid-amount
+  keywords: ["0.01"]
+- id: negative-amount-rejected
+  keywords: ["negative"]
+- id: same-account-rejected
+  keywords: ["same account"]
+- id: insufficient-funds-rejected
+  keywords: ["insufficient"]
+- id: daily-limit-across-multiple-transfers
+  keywords: ["multiple", "daily"]
+- id: failed-transfer-leaves-balances-unchanged
+  keywords: ["unchanged"]
+- id: confirmation-with-reference
+  keywords: ["reference"]
+- id: transaction-history
+  keywords: ["history"]
