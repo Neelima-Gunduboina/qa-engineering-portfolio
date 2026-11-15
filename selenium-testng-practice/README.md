@@ -39,7 +39,7 @@ src/test/resources/
 
 ## How to run
 
-Prerequisites: Java 17+, Maven 3.9+, Google Chrome. Selenium Manager downloads the right ChromeDriver automatically.
+Prerequisites: Java 25+, Maven 3.9+, Google Chrome. Selenium Manager downloads the right ChromeDriver automatically.
 
 ```bash
 mvn test                                              # full suite, headless Chrome
