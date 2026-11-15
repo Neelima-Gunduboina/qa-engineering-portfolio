@@ -1,0 +1,15 @@
+# Compiled class files
+*.class
+
+# Maven build output
+target/
+bin/
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+
+# OS files
+.DS_Store
+test-output/

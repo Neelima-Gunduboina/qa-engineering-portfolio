@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Selenium Practice - Full" parallel="classes" thread-count="3">
+    <test name="All Tests">
+        <classes>
+            <class name="com.neelima.practice.tests.LocatorStrategiesTest"/>
+            <class name="com.neelima.practice.tests.SauceLoginTest"/>
+            <class name="com.neelima.practice.tests.NegativeLoginTest"/>
+            <class name="com.neelima.practice.tests.ProductSortTest"/>
+            <class name="com.neelima.practice.tests.WaitStrategiesTest"/>
+        </classes>
+    </test>
+</suite>
