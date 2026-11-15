@@ -1,10 +1,12 @@
-name: Playwright CI
+name: ai-banking-qa-portfolio
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
+    paths: ["ai-banking-qa-portfolio/**", ".github/workflows/ai-banking-qa-portfolio.yml"]
   pull_request:
     branches: [main]
+    paths: ["ai-banking-qa-portfolio/**", ".github/workflows/ai-banking-qa-portfolio.yml"]
   workflow_dispatch:
 
 env:
@@ -12,125 +14,112 @@ env:
   NODE_VERSION: '22'
 
 jobs:
-  # ─────────────────────────────────────────────
   # Job 1: TypeScript type-check (fast gate)
-  # ─────────────────────────────────────────────
   typecheck:
     name: TypeScript Check
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ai-banking-qa-portfolio
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-
+          cache-dependency-path: ai-banking-qa-portfolio/package-lock.json
       - name: Install dependencies
         run: npm ci
-
       - name: Type check
         run: npm run typecheck
 
-  # ─────────────────────────────────────────────
   # Job 2: Sharded Playwright test run
-  # ─────────────────────────────────────────────
   test:
     name: Playwright Tests (Shard ${{ matrix.shard }}/${{ strategy.job-total }})
     runs-on: ubuntu-latest
     needs: typecheck
-
+    defaults:
+      run:
+        working-directory: ai-banking-qa-portfolio
     strategy:
       fail-fast: false
       matrix:
         shard: [1, 2, 3, 4]
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-
+          cache-dependency-path: ai-banking-qa-portfolio/package-lock.json
       - name: Install dependencies
         run: npm ci
-
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium firefox webkit
-
       - name: Run Playwright tests (shard ${{ matrix.shard }}/4)
         run: npx playwright test --shard=${{ matrix.shard }}/4
         env:
           BASE_URL: ${{ env.BASE_URL }}
-          # LLM key — set as repository secret to enable GenAI features
-          # If absent, self-heal/triage degrade gracefully; tests still run
+          # LLM key — set as repository secret to enable GenAI features.
+          # If absent, self-heal/triage degrade gracefully; tests still run.
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-
       - name: Upload blob report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: blob-report-shard-${{ matrix.shard }}
-          path: blob-report/
+          path: ai-banking-qa-portfolio/blob-report/
           retention-days: 14
-
       - name: Upload test results (screenshots, diffs)
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: test-results-shard-${{ matrix.shard }}
-          path: test-results/
+          path: ai-banking-qa-portfolio/test-results/
           retention-days: 14
-
       - name: Upload traces
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: traces-shard-${{ matrix.shard }}
-          path: test-results/**/*.zip
+          path: ai-banking-qa-portfolio/test-results/**/*.zip
           retention-days: 7
 
-  # ─────────────────────────────────────────────
   # Job 3: Merge reports + AI triage
-  # ─────────────────────────────────────────────
   report:
     name: Merge Reports & AI Triage
     runs-on: ubuntu-latest
     needs: test
     if: always()
-
+    defaults:
+      run:
+        working-directory: ai-banking-qa-portfolio
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-
+          cache-dependency-path: ai-banking-qa-portfolio/package-lock.json
       - name: Install dependencies
         run: npm ci
-
       - name: Download blob reports from all shards
         uses: actions/download-artifact@v4
         with:
           pattern: blob-report-shard-*
           merge-multiple: true
-          path: all-blob-reports/
-
+          path: ai-banking-qa-portfolio/all-blob-reports/
       - name: Merge Playwright reports
         run: npx playwright merge-reports --reporter html,json ./all-blob-reports
         env:
           # The json reporter writes here so the triage step can read it
           PLAYWRIGHT_JSON_OUTPUT_FILE: test-results/results.json
-
       - name: Upload merged HTML report
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: playwright-report/
+          path: ai-banking-qa-portfolio/playwright-report/
           retention-days: 30
-
       - name: Run AI failure triage
         if: always()
         run: npm run triage
@@ -139,46 +128,41 @@ jobs:
           GITHUB_STEP_SUMMARY: ${{ env.GITHUB_STEP_SUMMARY }}
         # Triage is non-blocking — a triage failure doesn't fail CI
         continue-on-error: true
-
       - name: Upload triage results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: triage-report
-          path: test-results/triage.json
+          path: ai-banking-qa-portfolio/test-results/triage.json
           retention-days: 14
 
-  # ─────────────────────────────────────────────
   # Job 4: API-only quick check (no browser)
-  # ─────────────────────────────────────────────
   api-tests:
     name: API Tests
     runs-on: ubuntu-latest
     needs: typecheck
-
+    defaults:
+      run:
+        working-directory: ai-banking-qa-portfolio
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-
+          cache-dependency-path: ai-banking-qa-portfolio/package-lock.json
       - name: Install dependencies
         run: npm ci
-
       - name: Install Playwright (API context only)
         run: npx playwright install --with-deps chromium
-
       - name: Run API tests
         run: npx playwright test tests/api --project=api
         env:
           BASE_URL: ${{ env.BASE_URL }}
-
       - name: Upload API test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: api-test-results
-          path: test-results/
+          path: ai-banking-qa-portfolio/test-results/
           retention-days: 7

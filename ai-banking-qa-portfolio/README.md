@@ -5,7 +5,7 @@
 > Playwright MCP browser control. Built against ParaBank, a public banking demo
 > that mirrors real-world fund transfer, bill payment, and account management flows.
 
-[![CI](https://github.com/Neelima-Gunduboina/ai-banking-qa-portfolio/actions/workflows/ci.yml/badge.svg)](https://github.com/Neelima-Gunduboina/ai-banking-qa-portfolio/actions/workflows/ci.yml)
+[![CI](https://github.com/Neelima-Gunduboina/qa-engineering-portfolio/actions/workflows/ai-banking-qa-portfolio.yml/badge.svg)](https://github.com/Neelima-Gunduboina/qa-engineering-portfolio/actions/workflows/ai-banking-qa-portfolio.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
 [![Playwright](https://img.shields.io/badge/Playwright-1.65-green)](https://playwright.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
@@ -95,7 +95,7 @@ ai-banking-qa-portfolio/
 │   └── triage.ts              # CI failure classification
 ├── requirements/              # Plain-English user stories (input for AI gen)
 ├── docs/                      # Architecture, MCP setup, AI feature guide
-└── .github/workflows/ci.yml   # Sharded CI pipeline
+└── (CI: ../.github/workflows/ai-banking-qa-portfolio.yml at the portfolio root)
 ```
 
 ---
@@ -174,7 +174,7 @@ npm run triage
 
 ## CI Pipeline
 
-The GitHub Actions workflow (`.github/workflows/ci.yml`) runs:
+The GitHub Actions workflow ([`.github/workflows/ai-banking-qa-portfolio.yml`](../.github/workflows/ai-banking-qa-portfolio.yml) at the portfolio root) runs:
 
 1. **TypeScript type check** — fast gate, fails immediately on type errors
 2. **Sharded test run** — 4 parallel runners, each executing 1/4 of the test suite

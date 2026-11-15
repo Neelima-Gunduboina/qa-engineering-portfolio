@@ -1,10 +1,12 @@
-name: CI
+name: qa-portfolio-parabank
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
+    paths: ["qa-portfolio-parabank/**", ".github/workflows/qa-portfolio-parabank.yml"]
   pull_request:
-    branches: [ main ]
+    branches: [main]
+    paths: ["qa-portfolio-parabank/**", ".github/workflows/qa-portfolio-parabank.yml"]
   workflow_dispatch:
     inputs:
       suite:
@@ -15,6 +17,9 @@ jobs:
   java-tests:
     name: Selenium + REST Assured + DB (${{ github.event.inputs.suite || 'smoke' }})
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: qa-portfolio-parabank
     steps:
       - uses: actions/checkout@v4
 
@@ -34,13 +39,16 @@ jobs:
         with:
           name: java-test-reports
           path: |
-            reports/
-            target/surefire-reports/
-            logs/
+            qa-portfolio-parabank/reports/
+            qa-portfolio-parabank/target/surefire-reports/
+            qa-portfolio-parabank/logs/
 
   postman-tests:
     name: Postman / Newman API tests
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: qa-portfolio-parabank
     steps:
       - uses: actions/checkout@v4
 
@@ -60,4 +68,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: newman-results
-          path: newman/
+          path: qa-portfolio-parabank/newman/

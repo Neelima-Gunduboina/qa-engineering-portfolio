@@ -1,10 +1,12 @@
-name: CI
+name: neelima-my-learning
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
+    paths: ["neelima-my-learning/**", ".github/workflows/neelima-my-learning.yml"]
   pull_request:
-    branches: [ main ]
+    branches: [main]
+    paths: ["neelima-my-learning/**", ".github/workflows/neelima-my-learning.yml"]
   workflow_dispatch:
 
 jobs:
@@ -13,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: java-basics
+        working-directory: neelima-my-learning/java-basics
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -28,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: selenium-testng-practice
+        working-directory: neelima-my-learning/selenium-testng-practice
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -42,4 +44,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: testng-reports
-          path: selenium-testng-practice/target/surefire-reports
+          path: neelima-my-learning/selenium-testng-practice/target/surefire-reports

@@ -2,7 +2,7 @@
 
 My learning repository for core Java and Selenium automation, built alongside my work as a QA Engineer in banking and insurance.
 
-[![CI](https://github.com/Neelima-Gunduboina/neelima-my-learning/actions/workflows/ci.yml/badge.svg)](https://github.com/Neelima-Gunduboina/neelima-my-learning/actions/workflows/ci.yml) ![Java](https://img.shields.io/badge/Java-25-blue) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
+[![CI](https://github.com/Neelima-Gunduboina/qa-engineering-portfolio/actions/workflows/neelima-my-learning.yml/badge.svg)](https://github.com/Neelima-Gunduboina/qa-engineering-portfolio/actions/workflows/neelima-my-learning.yml) ![Java](https://img.shields.io/badge/Java-25-blue) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
 | Project | What it covers | Tests |
 |---|---|---|

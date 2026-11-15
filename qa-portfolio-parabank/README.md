@@ -2,7 +2,7 @@
 
 End-to-end test framework for **ParaBank**, a public demo online bank. It covers banking workflows the way I test them at work: functional UI flows, API checks with **Postman** and **REST Assured**, and **SQL backend validation** of transfer business rules.
 
-[![CI](https://github.com/Neelima-Gunduboina/qa-portfolio-parabank/actions/workflows/ci.yml/badge.svg)](https://github.com/Neelima-Gunduboina/qa-portfolio-parabank/actions/workflows/ci.yml) ![Java](https://img.shields.io/badge/Java-25-blue) ![Selenium](https://img.shields.io/badge/Selenium-4.52-green) ![TestNG](https://img.shields.io/badge/TestNG-7.12-orange) ![Postman](https://img.shields.io/badge/Postman-Newman-ff6c37) ![SQL](https://img.shields.io/badge/SQL-Oracle%20mode-lightgrey) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
+[![CI](https://github.com/Neelima-Gunduboina/qa-engineering-portfolio/actions/workflows/qa-portfolio-parabank.yml/badge.svg)](https://github.com/Neelima-Gunduboina/qa-engineering-portfolio/actions/workflows/qa-portfolio-parabank.yml) ![Java](https://img.shields.io/badge/Java-25-blue) ![Selenium](https://img.shields.io/badge/Selenium-4.52-green) ![TestNG](https://img.shields.io/badge/TestNG-7.12-orange) ![Postman](https://img.shields.io/badge/Postman-Newman-ff6c37) ![SQL](https://img.shields.io/badge/SQL-Oracle%20mode-lightgrey) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
 ## What is tested
 

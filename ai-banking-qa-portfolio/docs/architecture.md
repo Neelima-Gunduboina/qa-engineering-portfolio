@@ -108,7 +108,7 @@ ai-banking-qa-portfolio/
 │   └── triage.ts              # LLM failure classification
 ├── requirements/              # Plain-English user stories (input for AI gen)
 ├── docs/                      # This documentation
-└── .github/workflows/ci.yml   # Sharded CI pipeline
+└── (CI: ../.github/workflows/ai-banking-qa-portfolio.yml at the portfolio root)
 ```
 
 ---
