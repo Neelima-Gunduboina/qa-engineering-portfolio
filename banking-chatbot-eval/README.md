@@ -2,7 +2,7 @@
 
 How do you test an AI assistant that answers customers' questions about their bank? This project tests a retrieval-augmented (RAG) FAQ assistant for **Harbourline Bank**, a fictional UK bank. It checks for wrong facts, hallucinations, regulated advice, prompt injection and leaked personal data, and a quality gate blocks a release when any score drops.
 
-[![CI](https://github.com/Neelima-Gunduboina/banking-chatbot-eval/actions/workflows/ci.yml/badge.svg)](https://github.com/Neelima-Gunduboina/banking-chatbot-eval/actions/workflows/ci.yml) ![Python](https://img.shields.io/badge/Python-3.11%2B-blue) ![Claude](https://img.shields.io/badge/LLM-Claude-orange) ![pytest](https://img.shields.io/badge/tests-pytest-green)
+[![CI](https://github.com/Neelima-Gunduboina/qa-engineering-portfolio/actions/workflows/banking-chatbot-eval.yml/badge.svg)](https://github.com/Neelima-Gunduboina/qa-engineering-portfolio/actions/workflows/banking-chatbot-eval.yml) ![Python](https://img.shields.io/badge/Python-3.11%2B-blue) ![Claude](https://img.shields.io/badge/LLM-Claude-orange) ![pytest](https://img.shields.io/badge/tests-pytest-green)
 
 ## Why this matters
 
@@ -96,7 +96,9 @@ docs/test-strategy.md   risk-based test strategy for an LLM feature
 ## CI
 
 - **Every push:** lint, 37 offline tests, good bot must pass, broken bot must fail.
-- **Weekday mornings and on demand:** live evals against Claude with the judge and 3 repeats; the report is uploaded as an artifact. Needs the `ANTHROPIC_API_KEY` repository secret.
+- **Weekday mornings and on demand:** live evals against Claude with the judge and 3 repeats; the report is uploaded as an artifact. Runs only when the `ANTHROPIC_API_KEY` repository secret is set, and skips cleanly otherwise.
+
+The workflow lives at the portfolio root: [`.github/workflows/banking-chatbot-eval.yml`](../.github/workflows/banking-chatbot-eval.yml).
 
 ## Results
 

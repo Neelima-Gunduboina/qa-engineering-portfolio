@@ -1,9 +1,11 @@
-name: CI
+name: banking-chatbot-eval
 
 on:
   push:
     branches: [main]
+    paths: ["banking-chatbot-eval/**", ".github/workflows/banking-chatbot-eval.yml"]
   pull_request:
+    paths: ["banking-chatbot-eval/**", ".github/workflows/banking-chatbot-eval.yml"]
   workflow_dispatch:
   schedule:
     - cron: "0 6 * * 1-5"   # live evals on weekday mornings
@@ -12,6 +14,9 @@ jobs:
   offline:
     name: Offline tests + eval self-check (no API key)
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: banking-chatbot-eval
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -33,22 +38,29 @@ jobs:
     needs: offline
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: banking-chatbot-eval
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - run: pip install -e ".[dev]"
-      - name: Check the API key secret is set
+      - name: Check for the API key secret
+        id: key
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: test -n "$ANTHROPIC_API_KEY" || (echo "Add ANTHROPIC_API_KEY as a repository secret" && exit 1)
+        run: |
+          if [ -n "$ANTHROPIC_API_KEY" ]; then echo "present=true" >> "$GITHUB_OUTPUT";
+          else echo "present=false" >> "$GITHUB_OUTPUT"; echo "::notice::ANTHROPIC_API_KEY not set - live evals skipped"; fi
       - name: Run live evals with judge and consistency checks
+        if: steps.key.outputs.present == 'true'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python -m evals.run --bot live --judge --repeat 3
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && steps.key.outputs.present == 'true'
         with:
           name: eval-report
-          path: reports/latest.json
+          path: banking-chatbot-eval/reports/latest.json

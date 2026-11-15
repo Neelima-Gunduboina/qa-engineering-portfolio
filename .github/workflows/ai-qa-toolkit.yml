@@ -1,15 +1,20 @@
-name: CI
+name: ai-qa-toolkit
 
 on:
   push:
     branches: [main]
+    paths: ["ai-qa-toolkit/**", ".github/workflows/ai-qa-toolkit.yml"]
   pull_request:
+    paths: ["ai-qa-toolkit/**", ".github/workflows/ai-qa-toolkit.yml"]
   workflow_dispatch:
 
 jobs:
   test:
     name: Lint + offline tests (no API key)
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ai-qa-toolkit
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -24,12 +29,18 @@ jobs:
     needs: test
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ai-qa-toolkit
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - run: pip install -e ".[dev]"
-      - env:
+      - name: Run the agent accuracy eval (skipped without ANTHROPIC_API_KEY)
+        env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: python -m ai_qa_toolkit.defect_agent eval
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then echo "::notice::ANTHROPIC_API_KEY not set - skipped"; exit 0; fi
+          python -m ai_qa_toolkit.defect_agent eval

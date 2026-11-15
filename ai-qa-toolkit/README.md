@@ -8,7 +8,7 @@ Three AI tools for test teams, each with a human in control and tests that prove
 | [**QA tools MCP server**](#2-qa-tools-mcp-server) | Lets Claude Code / Claude Desktop run allow-listed test suites and read failures and defect reports | Allow-list only, no shell, validated ids, read-only otherwise |
 | [**Defect investigation agent**](#3-defect-investigation-agent) | LangGraph agent that investigates a failed test, classifies it and drafts a report | Pauses for approval; nothing is written unless a person approves |
 
-[![CI](https://github.com/Neelima-Gunduboina/ai-qa-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/Neelima-Gunduboina/ai-qa-toolkit/actions/workflows/ci.yml) ![Python](https://img.shields.io/badge/Python-3.11%2B-blue) ![LangGraph](https://img.shields.io/badge/agent-LangGraph-purple) ![MCP](https://img.shields.io/badge/MCP-server-black)
+[![CI](https://github.com/Neelima-Gunduboina/qa-engineering-portfolio/actions/workflows/ai-qa-toolkit.yml/badge.svg)](https://github.com/Neelima-Gunduboina/qa-engineering-portfolio/actions/workflows/ai-qa-toolkit.yml) ![Python](https://img.shields.io/badge/Python-3.11%2B-blue) ![LangGraph](https://img.shields.io/badge/agent-LangGraph-purple) ![MCP](https://img.shields.io/badge/MCP-server-black)
 
 Works with my Java/TestNG banking framework [qa-portfolio-parabank](https://github.com/Neelima-Gunduboina/qa-portfolio-parabank).
 
