@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Playwright artifacts
+playwright-report/
+test-results/
+playwright/.auth/
+
+# Environment secrets — NEVER commit
+.env
+.env.local
+.env.*.local
+
+# OS / editor
+.DS_Store
+.vscode/settings.json
+*.swp
+*.swo
+
+# Snapshot baselines are committed; update via npm run update-snapshots
+# test-results/snapshots/  <-- intentionally NOT ignored
+
+# TypeScript incremental build info
+*.tsbuildinfo
+
+# LLM cache (generated at runtime, gitignored for freshness)
+.locator-cache.json
+
+# Logs
+*.log
+npm-debug.log*
