@@ -9,6 +9,7 @@ My learning repository for core Java and Selenium automation, built alongside my
 | [`java-basics/`](java-basics/) | Data types, control flow, OOP, collections, exceptions, streams; classic number programs; a layered Student Management mini-project | 70 JUnit 5 tests |
 | [`selenium-testng-practice/`](selenium-testng-practice/) | Selenium WebDriver + TestNG + Page Object Model: locator strategies, implicit/explicit/fluent waits, assertions, dropdowns, data-driven negative testing | 21 TestNG tests |
 | [`skills-check/`](skills-check/) | Timed, no-AI exercises (Java, Selenium, API, SQL, test design) that track my progress | Written as I go |
+| [`career-programme/`](career-programme/README.md) | My career plan: target roles, curriculum, project specs, resume drafts, interview bank (private notes) | — |
 
 All three projects target Java 25. GitHub Actions runs `java-basics` and `selenium-testng-practice` on every push.
 
