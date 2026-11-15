@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1-5"   # live evals on weekday mornings
+
+jobs:
+  offline:
+    name: Offline tests + eval self-check (no API key)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: ruff check .
+      - run: pytest -q
+      - name: Good bot passes the gate
+        run: python -m evals.run --bot scripted:good
+      - name: Broken bot must fail the gate (tests the tests)
+        run: |
+          if python -m evals.run --bot scripted:broken; then
+            echo "The eval failed to catch the seeded failures" && exit 1
+          fi
+
+  live:
+    name: Live evals against Claude
+    needs: offline
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - name: Check the API key secret is set
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: test -n "$ANTHROPIC_API_KEY" || (echo "Add ANTHROPIC_API_KEY as a repository secret" && exit 1)
+      - name: Run live evals with judge and consistency checks
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python -m evals.run --bot live --judge --repeat 3
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-report
+          path: reports/latest.json
