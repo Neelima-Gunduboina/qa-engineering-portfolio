@@ -1,0 +1,120 @@
+# Recorded CI failures with the correct category, used to measure the agent's accuracy.
+# F-01..F-03 are real defects from github.com/Neelima-Gunduboina/qa-portfolio-parabank
+# (DEF-001, DEF-004, DEF-005). The rest are typical failures from the same suites.
+#
+# app_up: the result of the application health check recorded at failure time.
+
+failures:
+  - id: F-01
+    expected: REAL_BUG
+    test: com.neelima.qa.tests.api.AccountApiTest.negativeAmountShouldBeRejected
+    error: "AssertionError: DEF-001 reproduced: negative transfer accepted with HTTP 200 — Successfully transferred $-5 from account #13344 to account #13455"
+    retried: true
+    passed_on_retry: false
+    app_up: true
+    log: |
+      POST /parabank/services/bank/transfer?fromAccountId=13344&toAccountId=13455&amount=-5 -> 200
+      Response: Successfully transferred $-5 from account #13344 to account #13455
+      AssertionError: expected status >= 400
+
+  - id: F-02
+    expected: REAL_BUG
+    test: com.neelima.qa.tests.api.AccountApiTest.zeroAmountShouldBeRejected
+    error: "AssertionError: DEF-004 reproduced: $0 transfer accepted with HTTP 200 — Successfully transferred $0 from account #13366 to account #13477"
+    retried: true
+    passed_on_retry: false
+    app_up: true
+    log: |
+      POST /parabank/services/bank/transfer?amount=0 -> 200
+      AssertionError: expected status >= 400
+
+  - id: F-03
+    expected: REAL_BUG
+    test: com.neelima.qa.tests.api.AccountApiTest.longUsernameIsNotReportedAsDuplicate
+    error: "AssertionError: DEF-005 reproduced: new 23-character username reported as already existing"
+    retried: true
+    passed_on_retry: false
+    app_up: true
+    log: |
+      POST /parabank/register.htm username=long_k3j9x2m1q8abcdef -> 200
+      Page contains: This username already exists.
+
+  - id: F-04
+    expected: ENV_ISSUE
+    test: com.neelima.qa.tests.api.AccountApiTest.validLoginReturnsCustomer
+    error: "java.net.ConnectException: Connection refused: parabank.parasoft.com/52.0.0.1:443"
+    retried: true
+    passed_on_retry: false
+    app_up: false
+    log: |
+      GET /parabank/services/bank/login/api_x1/Test@1234
+      java.net.ConnectException: Connection refused
+
+  - id: F-05
+    expected: ENV_ISSUE
+    test: com.neelima.qa.tests.api.AccountApiTest.customerAccountsHaveValidFields
+    error: "AssertionError: expected [200] but found [503]"
+    retried: true
+    passed_on_retry: false
+    app_up: false
+    log: |
+      GET /parabank/services/bank/customers/12212/accounts -> 503 Service Unavailable
+      <html><body><h1>503 Service Temporarily Unavailable</h1></body></html>
+
+  - id: F-06
+    expected: LOCATOR_DRIFT
+    test: com.neelima.qa.tests.ui.FundTransferTest.transferBetweenOwnAccounts
+    error: "org.openqa.selenium.NoSuchElementException: no such element: Unable to locate element: {\"method\":\"css selector\",\"selector\":\"input[value='Transfer']\"}"
+    retried: true
+    passed_on_retry: false
+    app_up: true
+    log: |
+      Opened /parabank/transfer.htm
+      Page title: ParaBank | Transfer Funds
+      Found button: <button type="submit" class="btn-primary">Transfer</button>
+      NoSuchElementException: input[value='Transfer']
+
+  - id: F-07
+    expected: LOCATOR_DRIFT
+    test: tests/ui/login.spec.ts > Login > valid customer can log in
+    error: "TimeoutError: locator.click: Timeout 15000ms exceeded. waiting for locator('#loginBtn') — locator resolved to 0 elements"
+    retried: true
+    passed_on_retry: false
+    app_up: true
+    log: |
+      navigated to /parabank/index.htm
+      page has: <input type="submit" class="button" value="Log In">
+      locator('#loginBtn') resolved to 0 elements
+
+  - id: F-08
+    expected: FLAKY
+    test: com.neelima.qa.tests.ui.BillPayTest.payBillDebitsAccount
+    error: "org.openqa.selenium.StaleElementReferenceException: stale element reference: element is not attached to the page document"
+    retried: true
+    passed_on_retry: true
+    app_up: true
+    log: |
+      attempt 1: StaleElementReferenceException after account dropdown reloaded via AJAX
+      attempt 2: PASSED
+
+  - id: F-09
+    expected: FLAKY
+    test: tests/ui/dashboard.spec.ts > Accounts overview shows balances
+    error: "TimeoutError: page.waitForURL: Timeout 15000ms exceeded waiting for /overview\\.htm/"
+    retried: true
+    passed_on_retry: true
+    app_up: true
+    log: |
+      attempt 1: navigation took 17.2s (shared public demo under load)
+      attempt 2: PASSED in 2.1s
+
+  - id: F-10
+    expected: TEST_BUG
+    test: com.neelima.qa.tests.api.AccountApiTest.transferReconcilesBalancesAndHistory
+    error: "AssertionError: Source account not debited expected [90.0] but found [90.00]"
+    retried: true
+    passed_on_retry: false
+    app_up: true
+    log: |
+      balance before: 100.00, transfer 10.00, balance after: 90.00
+      Assertion compared BigDecimal 90.0 with 90.00 using equals() (scale-sensitive)
