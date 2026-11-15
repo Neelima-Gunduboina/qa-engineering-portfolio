@@ -34,10 +34,18 @@ public class ParaBankApiClient {
      * relying on a shared account such as john/demo.
      */
     public void registerCustomer(String username, String password) {
+        Response r = submitRegistration(username, password);
+        if (r.statusCode() != 200 || !r.asString().contains("Your account was created successfully")) {
+            throw new IllegalStateException("Customer registration failed (HTTP " + r.statusCode() + ")");
+        }
+    }
+
+    /** Posts the sign-up form and returns the resulting page, successful or not. */
+    public Response submitRegistration(String username, String password) {
         SessionFilter session = new SessionFilter();
         String webUrl = ConfigLoader.get("base.url");
         given().filter(session).get(webUrl + "/register.htm").then().statusCode(200);
-        Response r = given().filter(session)
+        return given().filter(session)
                 .contentType(ContentType.URLENC)
                 .formParam("customer.firstName", "Api")
                 .formParam("customer.lastName", "Tester")
@@ -51,9 +59,6 @@ public class ParaBankApiClient {
                 .formParam("customer.password", password)
                 .formParam("repeatedPassword", password)
                 .post(webUrl + "/register.htm");
-        if (r.statusCode() != 200 || !r.asString().contains("Your account was created successfully")) {
-            throw new IllegalStateException("Customer registration failed (HTTP " + r.statusCode() + ")");
-        }
     }
 
     public Response login(String username, String password) {

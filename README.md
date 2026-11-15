@@ -11,19 +11,24 @@ End-to-end test framework for **ParaBank**, a public demo online bank. It covers
 | **UI** | Registration, duplicate username, login / invalid / empty login, open account, **fund transfer with balance reconciliation** (data-driven), **bill payment** | Selenium WebDriver, POM, TestNG |
 | **API** | Valid / invalid login, customer accounts, account lookup, unknown account (400), non-numeric amount, **transfer → balances → transaction history**, **bill payment → balance → history** | REST Assured + Postman/Newman |
 | **Backend (SQL)** | Debit/credit, total-balance reconciliation, audit row, **insufficient funds rollback**, unknown account rollback, negative amount blocked | JDBC + H2 (Oracle mode) |
-| **Defects** | 3 real defects found in ParaBank and documented (see below) | Reproduced in TestNG and Postman |
+| **Defects** | 5 real defects found in ParaBank and documented (see below) | Reproduced in TestNG, Postman and Playwright |
 
 ## Defects found
 
-Testing every layer found three real defects in the live ParaBank demo. Each has a full report with steps, expected vs actual results and evidence, plus an automated test that reproduces it.
+Testing every layer against the live ParaBank demo surfaced five defects. Each has a full report (steps, expected vs
+actual, evidence, suggested fix) and an automated test.
 
-| ID | Defect | Severity | Found by |
+| ID | Defect | Severity | Status |
 |---|---|---|---|
-| [DEF-001](docs/defects/DEF-001-negative-transfer-amount.md) | Transfer API accepts a **negative amount** and moves money in reverse | High | Negative API testing |
-| [DEF-002](docs/defects/DEF-002-login-accepts-unknown-credentials.md) | Web login with **unknown credentials signs you in as another customer** | Critical | Negative UI testing |
-| [DEF-003](docs/defects/DEF-003-ui-bill-pay-does-not-debit.md) | UI Bill Pay shows "Payment Complete" but **never debits the account** (the API path works) | High | UI balance reconciliation, cross-checked via API |
+| [DEF-001](docs/defects/DEF-001-negative-transfer-amount.md) | Transfer API accepts a **negative amount** and moves money in reverse | High | Open |
+| [DEF-002](docs/defects/DEF-002-login-accepts-unknown-credentials.md) | Web login with **unknown credentials signed in as another customer** | Critical | Not reproducible since the 15 Nov demo reset; guarded by a regression test |
+| [DEF-003](docs/defects/DEF-003-ui-bill-pay-does-not-debit.md) | UI Bill Pay showed "Payment Complete" but **did not debit the account** (the API path worked) | High | Not reproducible since the 15 Nov demo reset; guarded by a regression test |
+| [DEF-004](docs/defects/DEF-004-zero-and-same-account-transfer.md) | **$0 transfers** and transfers **to the same account** are accepted | Medium | Open |
+| [DEF-005](docs/defects/DEF-005-long-username-reported-as-duplicate.md) | New usernames over **20 characters** are rejected as *"already exists"* | Medium | Open |
 
-The defect tests sit in the `known-defect` TestNG group, so CI stays green while each defect can still be reproduced on demand with `mvn test -Pknown-defects`.
+Tests for open defects sit in the `known-defect` TestNG group, so CI stays green while each defect can still be
+reproduced on demand with `mvn test -Pknown-defects`. When a defect stops reproducing, its test moves into the
+regression suite as a guard.
 
 ## Project structure
 
@@ -90,7 +95,7 @@ docker build -t parabank-qa . && docker run --rm parabank-qa
 - **No `Thread.sleep()`**: every interaction waits explicitly, and ParaBank's AJAX-loaded account dropdowns are awaited before selection.
 - **Assertions check the data itself**, not just the page: for example, a transfer test reads balances before and after and checks the debit and credit with `BigDecimal`.
 - **Self-contained test data**: every UI test, the API suite and the Postman run each register their own new customer, so nothing depends on shared demo data. The public demo resets regularly, and its old `john/demo` login no longer exists.
-- **Robust against a shared demo**: UI suites run sequentially, and the two long end-to-end UI flows retry once (`RetryOnce`), because other visitors' activity can leak into a session (DEF-002). A genuine regression fails both attempts.
+- **Robust against a shared demo**: UI suites run sequentially, the long end-to-end UI flows retry once (`RetryOnce`), and generated usernames are random and at most 20 characters (DEF-005). A genuine regression fails both attempts.
 - **Known defects are tracked, not hidden**: they sit in the `known-defect` TestNG group (excluded from suites) and in a separate Postman folder.
 - **No real secrets**: test customers are generated at runtime. To use an existing customer instead, pass `-Dapi.username=… -Dapi.password=…`.
 

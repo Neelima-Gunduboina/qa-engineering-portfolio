@@ -8,7 +8,7 @@
     "zipCode": "12345",
     "phone": "555-0100",
     "ssn": "123-45-6789",
-    "username": "autotest_${timestamp}",
+    "username": "${unique}",
     "password": "Password123!"
   }
 ]

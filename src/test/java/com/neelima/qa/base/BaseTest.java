@@ -1,6 +1,7 @@
 package com.neelima.qa.base;
 
 import com.neelima.qa.utils.ConfigLoader;
+import com.neelima.qa.utils.UniqueNames;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -54,8 +55,7 @@ public abstract class BaseTest {
     protected static Map<String, String> uniqueCustomer(Map<String, Object> template) {
         Map<String, String> customer = new HashMap<>();
         template.forEach((k, v) -> customer.put(k, String.valueOf(v)));
-        String suffix = String.valueOf(System.nanoTime()).substring(6);
-        customer.put("username", customer.get("username").replace("${timestamp}", suffix));
+        customer.put("username", customer.get("username").replace("${unique}", UniqueNames.username("ui")));
         return customer;
     }
 }

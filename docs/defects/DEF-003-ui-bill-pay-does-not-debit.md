@@ -6,9 +6,17 @@
 | **Component** | ParaBank web UI – Bill Pay (`billpay.htm` → `POST /services_proxy/bank/billpay`) |
 | **Severity** | High (customer is told a payment was made when it was not) |
 | **Priority** | P1 |
-| **Status** | Open |
+| **Status** | Not reproducible since 15 Nov 2026 (demo reset) — monitoring |
 | **Environment** | https://parabank.parasoft.com (public demo), found 14 Nov 2026 |
 | **Found by** | UI end-to-end test with balance reconciliation (`BillPayTest.payBillDebitsAccount`) |
+
+## Status history
+| When (GMT) | Result |
+|---|---|
+| 14 Nov 2026, 23:30–23:45 | Reproduced: Selenium 2/2, curl via the UI proxy 2/2 |
+| 15 Nov 2026, 00:30 | Not reproducible after the demo database was reset: the same UI-proxy request debited the account |
+
+`BillPayTest.payBillDebitsAccount` now runs in the regression suite as a guard.
 
 ## Summary
 After a customer submits Bill Pay, the page shows **"Bill Payment Complete"** with the payee and amount, but
@@ -38,11 +46,11 @@ so the defect is in the web UI's proxy path.
 | REST API | `POST /parabank/services/bank/billpay?accountId=…&amount=25.50` | ✅ Yes |
 
 ## Evidence
-- Automated (fails, group `known-defect`): `BillPayTest.payBillDebitsAccount`
+- Automated: `BillPayTest.payBillDebitsAccount` failed on both attempts while the defect was present (now a regression guard)
 - Automated (passes): `AccountApiTest.billPayDebitsAccount`
 
 ## Suggested fix
 Make the UI proxy call the same posting logic as the REST service, and only show the confirmation after the debit is committed.
 
 ## Retest plan
-Once fixed, move `payBillDebitsAccount` back to the `regression` group and run `mvn test -Pregression`.
+`mvn test -Pregression` runs the guard. If it fails again, compare with `AccountApiTest.billPayDebitsAccount` to see whether only the UI path is affected.

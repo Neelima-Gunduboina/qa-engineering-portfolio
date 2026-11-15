@@ -3,6 +3,7 @@ package com.neelima.qa.tests.api;
 import com.neelima.qa.api.ParaBankApiClient;
 import com.neelima.qa.listeners.TestListener;
 import com.neelima.qa.utils.ConfigLoader;
+import com.neelima.qa.utils.UniqueNames;
 import io.restassured.response.Response;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -35,7 +36,7 @@ public class AccountApiTest {
         username = ConfigLoader.get("api.username", "");
         password = ConfigLoader.get("api.password", "");
         if (username.isEmpty()) {
-            username = "api" + System.currentTimeMillis();
+            username = UniqueNames.username("api");
             password = "Test@1234";
             api.registerCustomer(username, password);
         }
@@ -146,6 +147,49 @@ public class AccountApiTest {
 
         Assert.assertTrue(r.statusCode() >= 400,
                 "DEF-001 reproduced: negative transfer accepted with HTTP " + r.statusCode() + " — " + r.asString());
+    }
+
+    /**
+     * Known defect DEF-004 (docs/defects/DEF-004-zero-and-same-account-transfer.md):
+     * a $0 transfer is accepted and reported as successful.
+     */
+    @Test(groups = {"known-defect"}, description = "DEF-004: zero transfer amount must be rejected")
+    public void zeroAmountShouldBeRejected() {
+        long from = openAccount(0);
+        long to = openAccount(1);
+
+        Response r = api.transfer(from, to, "0");
+
+        Assert.assertTrue(r.statusCode() >= 400,
+                "DEF-004 reproduced: $0 transfer accepted with HTTP " + r.statusCode() + " — " + r.asString());
+    }
+
+    /**
+     * Known defect DEF-004 (docs/defects/DEF-004-zero-and-same-account-transfer.md):
+     * a transfer from an account to itself is accepted.
+     */
+    @Test(groups = {"known-defect"}, description = "DEF-004: transfer to the same account must be rejected")
+    public void sameAccountTransferShouldBeRejected() {
+        long account = openAccount(0);
+
+        Response r = api.transfer(account, account, "1.00");
+
+        Assert.assertTrue(r.statusCode() >= 400,
+                "DEF-004 reproduced: same-account transfer accepted with HTTP " + r.statusCode() + " — " + r.asString());
+    }
+
+    /**
+     * Known defect DEF-005 (docs/defects/DEF-005-long-username-reported-as-duplicate.md):
+     * a never-used username of 21+ characters is rejected with "This username already exists".
+     */
+    @Test(groups = {"known-defect"}, description = "DEF-005: a long new username must not be reported as a duplicate")
+    public void longUsernameIsNotReportedAsDuplicate() {
+        String username = UniqueNames.username("long") + "abcdef"; // 23 characters, never used
+
+        Response r = api.submitRegistration(username, "Test@1234");
+
+        Assert.assertFalse(r.asString().contains("This username already exists"),
+                "DEF-005 reproduced: new 23-character username reported as already existing");
     }
 
     private long openAccount(int type) {

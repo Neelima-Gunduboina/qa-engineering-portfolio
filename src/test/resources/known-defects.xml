@@ -10,8 +10,6 @@
             </run>
         </groups>
         <classes>
-            <class name="com.neelima.qa.tests.ui.LoginTest"/>
-            <class name="com.neelima.qa.tests.ui.BillPayTest"/>
             <class name="com.neelima.qa.tests.api.AccountApiTest"/>
         </classes>
     </test>

@@ -35,12 +35,13 @@ public class BillPayTest extends BaseTest {
     }
 
     /**
-     * Known defect DEF-003 (docs/defects/DEF-003-ui-bill-pay-does-not-debit.md):
-     * the confirmation is shown but the account is never debited and no transaction is recorded.
-     * The same payment through the REST API works (AccountApiTest.billPayDebitsAccount).
+     * Regression guard for DEF-003 (docs/defects/DEF-003-ui-bill-pay-does-not-debit.md):
+     * on 14 Nov 2026 the confirmation was shown but the account was never debited. Not
+     * reproducible since the demo reset on 15 Nov; this check fails if the defect returns.
      */
-    @Test(groups = {"known-defect", "e2e"}, dataProvider = "registerData", dataProviderClass = JsonDataProvider.class,
-            description = "DEF-003: a UI bill payment must debit the account")
+    @Test(groups = {"regression", "e2e"}, retryAnalyzer = RetryOnce.class,
+            dataProvider = "registerData", dataProviderClass = JsonDataProvider.class,
+            description = "DEF-003 guard: a UI bill payment debits the account")
     public void payBillDebitsAccount(Map<String, Object> template) {
         String account = registerAndGetFirstAccount(template);
         BigDecimal before = new AccountsOverviewPage(getDriver()).getBalance(account);

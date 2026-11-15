@@ -7,8 +7,8 @@ import org.testng.ITestResult;
  * Retries a failed test once.
  *
  * Used only on the long end-to-end UI flows. The public ParaBank demo is shared by many
- * users and keeps some server-side state across sessions (see DEF-002), so another visitor's
- * activity can occasionally change what a test sees mid-flow. A single retry separates that
+ * visitors and is reset without notice, so a request can occasionally fail or see stale data
+ * for reasons unrelated to the code under test. A single retry separates that
  * environment noise from a real regression: a genuine defect fails both attempts.
  * Retried attempts are still visible in the TestNG and Extent reports.
  */

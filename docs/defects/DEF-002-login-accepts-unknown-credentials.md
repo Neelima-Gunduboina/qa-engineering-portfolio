@@ -6,9 +6,17 @@
 | **Component** | ParaBank web UI – `POST /parabank/login.htm` |
 | **Severity** | Critical (authentication bypass; another customer's accounts are exposed) |
 | **Priority** | P1 |
-| **Status** | Open |
+| **Status** | Not reproducible since 15 Nov 2026 (demo reset) — monitoring |
 | **Environment** | https://parabank.parasoft.com (public demo), found 14 Nov 2026 |
 | **Found by** | Negative UI testing (`LoginTest.invalidCredentialsAreRejected`) |
+
+## Status history
+| When (GMT) | Result |
+|---|---|
+| 14 Nov 2026, 23:00–23:45 | Reproduced every attempt: 6/6 fresh curl sessions plus repeated Selenium runs |
+| 15 Nov 2026, 00:30 | Not reproducible (0/5) after the demo database was reset (account ids restarted from ~16000) |
+
+The test now runs in the regression suite as a guard, so it fails if the defect returns.
 
 ## Summary
 Submitting the login form with a username that does not exist and a wrong password does **not** show an error.
@@ -38,7 +46,7 @@ The REST endpoint for the same credentials behaves correctly (`GET /services/ban
   (`RetryOnce`) and the UI suites run sequentially.
 
 ## Evidence
-- Automated: `LoginTest.invalidCredentialsAreRejected` (TestNG group `known-defect`) times out waiting for the error message.
+- Automated: `LoginTest.invalidCredentialsAreRejected` timed out waiting for the error message while the defect was present (now a regression guard).
 - Manual check with curl:
   ```bash
   B=https://parabank.parasoft.com/parabank; J=$(mktemp)
@@ -51,4 +59,5 @@ Reject the login when no customer matches the credentials, and never fall back t
 Customer state should be scoped to the HTTP session, not held in a shared object.
 
 ## Retest plan
-Once fixed, move the test back into the `regression` group and run `mvn test -Pregression`.
+`mvn test -Pregression` on every change. If the defect recurs, capture the server state (time, recent registrations)
+because it appears to depend on the demo's data.

@@ -32,12 +32,12 @@ public class LoginTest extends BaseTest {
     }
 
     /**
-     * Known defect DEF-002 (docs/defects/DEF-002-login-accepts-unknown-credentials.md):
-     * the web login accepts an unknown username/password and signs the visitor in as
-     * another customer. Kept in the "known-defect" group so the suites stay green while
-     * the defect stays reproducible: mvn test -Pknown-defects
+     * Regression guard for DEF-002 (docs/defects/DEF-002-login-accepts-unknown-credentials.md):
+     * the web login accepted an unknown username/password and signed the visitor in as
+     * another customer. Observed on 14 Nov 2026; not reproducible since the demo reset on
+     * 15 Nov, so this runs in regression and will fail if the defect returns.
      */
-    @Test(groups = {"known-defect", "negative"}, description = "DEF-002: unknown credentials must be rejected")
+    @Test(groups = {"regression", "negative"}, description = "DEF-002 guard: unknown credentials must be rejected")
     public void invalidCredentialsAreRejected() {
         open("/index.htm");
         LoginPage login = new LoginPage(getDriver())
